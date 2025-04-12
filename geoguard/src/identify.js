@@ -7,6 +7,7 @@ function Identify() {
   const [pictures, setPictures] = useState([]);
   const [currentPictureIndex, setCurrentPictureIndex] = useState(null);
 
+  
   // Set first picture as current when added
   useEffect(() => {
     if (pictures.length > 0 && currentPictureIndex === null) {
@@ -18,13 +19,32 @@ function Identify() {
 
   const addPictureFile = (file) => {
     const fileUrl = URL.createObjectURL(file);
-    setPictures(prev => {
-      const newPictures = [...prev, { url: fileUrl, file }];
-      // Update currentPictureIndex after pictures have been updated
-      setCurrentPictureIndex(newPictures.length - 1);
-      return newPictures;
-    });
+    const newPictures = [...pictures, { url: fileUrl, file }];
+    setPictures(newPictures);
+    setCurrentPictureIndex(newPictures.length - 1);
+  
+    // Send to backend
+    const formData = new FormData();
+    formData.append("file", file); // Backend must accept 'file' field
+  
+    fetch("http://localhost:8000/submit/", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json(); // Or .text(), based on backend
+      })
+      .then((data) => {
+        console.log("Upload successful:", data);
+      })
+      .catch((error) => {
+        console.error("Upload error:", error);
+      });
   };
+  
 
   const handleDownload = () => {
     if (currentPictureIndex !== null) {
