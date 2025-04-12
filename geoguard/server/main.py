@@ -200,8 +200,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
 
-result = process_image_for_privacy(test_image_path, output_image_path)
-print(result)
 
 #print(localize_objects("landmarks.webp"))
 print(text_identification("street_signs.jpeg"))
