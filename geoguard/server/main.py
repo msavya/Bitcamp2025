@@ -56,7 +56,12 @@ def localize_objects(path):
             # Convert to pixel coordinates
             center_x = int(x * width)
             center_y = int(y * height)
-            output += f"Centroid: ({center_x}, {center_y})\n"
+            output += f"Centroid (in pixels): ({center_x}, {center_y})\n"
+
+            # Convert back to normalized coordinates
+            normalized_center_x = center_x / width
+            normalized_center_y = center_y / height
+            output += f"Centroid (normalized): ({normalized_center_x:.4f}, {normalized_center_y:.4f})\n"
 
             # Draw the centroid
             cv2.circle(img, (center_x, center_y), radius=10, color=(0, 0, 255), thickness=-1)
@@ -66,6 +71,7 @@ def localize_objects(path):
                 'confidence': object_.score,
                 'vertices': vertices,
                 'centroid': (center_x, center_y),
+                'normalized_centroid': (normalized_center_x, normalized_center_y),
                 'normalized': True
             })
 
@@ -91,29 +97,26 @@ def text_identification(path):
         content = image_file.read()
     
     img = vision.Image(content=content)
-    
     image = cv2.imread(path)
-    
-    image = cv2.imread(path)
-        
-    
-        
-    
-    image = cv2.imread(path)
-        
+
+    if image is None:
+        return "Error: Image not found or unreadable", []
+
+    height, width = image.shape[:2]
+
     response = client.text_detection(image=img)
     texts = response.text_annotations
 
     output = f"Number of text elements found: {len(texts)-1}\n"
     bounding_boxes = []
-    
+
     for text in texts[1:]:  # Skip index 0 (full block)
         vertices = text.bounding_poly.vertices
         box = [(vertex.x, vertex.y) for vertex in vertices]
         bounding_boxes.append({
             'text': text.description,
             'vertices': box,
-            'normalized': False
+            'normalized': True  # now storing normalized centroid
         })
         output += f"Text: '{text.description}', Coordinates: {box}\n"
 
@@ -121,21 +124,24 @@ def text_identification(path):
         x = sum(v.x for v in vertices) / len(vertices)
         y = sum(v.y for v in vertices) / len(vertices)
 
-        # Convert to pixel coordinates
-        center_x = int(x)
-        center_y = int(y)
-        output += f"Centroid: ({center_x}, {center_y})\n"
+        # Normalize centroid coordinates
+        normalized_x = x / width
+        normalized_y = y / height
+        output += f"Normalized Centroid: ({normalized_x:.4f}, {normalized_y:.4f})\n"
+
+        # Convert to pixel coordinates for visualization
+        center_x = int(normalized_x * width)
+        center_y = int(normalized_y * height)
 
         # Draw the centroid
         cv2.circle(image, (center_x, center_y), radius=6, color=(0, 0, 255), thickness=-1)
-            
+
+        # Update dictionary with normalized centroid
+        bounding_boxes[-1]['normalized_centroid'] = (normalized_x, normalized_y)
+
     cv2.imwrite('edited_text.png', image)
 
-       
-
-       
-
-
+    return output, bounding_boxes
 
 
 def blur_combined_elements(image_path, output_path, elements_data):
@@ -210,11 +216,8 @@ output_image_path = "nyc2_privacy_protected.jpg"
 #     script_dir = os.path.dirname(os.path.abspath(__file__))
 #     os.chdir(script_dir)
 
-
-
 #print(localize_objects("landmarks.webp"))
-print(text_identification("street_signs.jpeg"))
-
-
-#print(localize_objects("landmarks.webp"))
-print(text_identification("street_signs.jpeg"))
+result_text, object_data = text_identification("street_signs.jpeg")
+print("🧠 Object Detection Report")
+print("=" * 30)
+print(result_text)

@@ -1,50 +1,61 @@
+import React, { useState, useEffect, useRef } from "react";
 import AddButton from "./components/addButton";
-import PictureView from "./components/pictureView"; // Assuming you already have this component
+import PictureView from "./components/pictureView";
 import EmptyView from "./components/emptyView";
-import { useState, useEffect } from "react";
 
 function Identify() {
   const [pictures, setPictures] = useState([]);
   const [currentPictureIndex, setCurrentPictureIndex] = useState(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const imageRef = useRef(null);
+  const[sampleCoordinates, setSampleCoordinates] = useState([]);
 
-  
-  // Set first picture as current when added
+
+  useEffect(() => {
+    // Example: normalized coordinates (percentages)
+    setSampleCoordinates([
+      { x: 0.2333, y: 0.3289 }
+
+    ]);
+  }, []);
+
   useEffect(() => {
     if (pictures.length > 0 && currentPictureIndex === null) {
       setCurrentPictureIndex(0);
     } else if (pictures.length === 0) {
       setCurrentPictureIndex(null);
     }
-  }, [pictures]); 
+  }, [pictures]);
 
   const addPictureFile = (file) => {
     const fileUrl = URL.createObjectURL(file);
     const newPictures = [...pictures, { url: fileUrl, file }];
     setPictures(newPictures);
     setCurrentPictureIndex(newPictures.length - 1);
-  
-    // Send to backend
+
     const formData = new FormData();
-    formData.append("file", file); // Backend must accept 'file' field
-  
+    formData.append("file", file);
     fetch("http://localhost:8000/submit/", {
       method: "POST",
       body: formData,
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json(); // Or .text(), based on backend
-      })
+      .then((res) => res.json())
       .then((data) => {
         console.log("Upload successful:", data);
       })
-      .catch((error) => {
-        console.error("Upload error:", error);
+      .catch((err) => {
+        console.error("Upload error:", err);
       });
   };
-  
+
+  const handleImageLoad = () => {
+    if (imageRef.current) {
+      setImageSize({
+        width: imageRef.current.offsetWidth,
+        height: imageRef.current.offsetHeight,
+      });
+    }
+  };
 
   const handleDownload = () => {
     if (currentPictureIndex !== null) {
@@ -59,12 +70,11 @@ function Identify() {
     URL.revokeObjectURL(pictures[index].url);
     const newPictures = pictures.filter((_, i) => i !== index);
     setPictures(newPictures);
-    
-    // Adjust current picture index
+
     if (currentPictureIndex === index) {
-      setCurrentPictureIndex(newPictures.length > 0 ? 
-        Math.min(index, newPictures.length - 1) : 
-        null);
+      setCurrentPictureIndex(
+        newPictures.length > 0 ? Math.min(index, newPictures.length - 1) : null
+      );
     } else if (currentPictureIndex > index) {
       setCurrentPictureIndex(currentPictureIndex - 1);
     }
@@ -72,21 +82,36 @@ function Identify() {
 
   const handleThumbnailClick = (index) => {
     setCurrentPictureIndex(index);
-    console.log(`Thumbnail ${index + 1} clicked, updating current index to ${index}`);
   };
 
   return (
     <div className="body bg-custom-bg bg-cover bg-center min-h-screen flex flex-col items-center justify-center p-4">
-      {/* Main Image Container - Fixed height, variable width */}
-      <div className="mb-8 flex justify-center" style={{ height: '50vh' }}>
+      {/* Main Image Container */}
+      <div className="mb-8 flex justify-center" style={{ height: "50vh" }}>
         {currentPictureIndex !== null && pictures.length > 0 ? (
           <div className="relative h-full">
             <img
+              ref={imageRef}
               src={pictures[currentPictureIndex].url}
               alt={`Uploaded ${currentPictureIndex + 1}`}
+              onLoad={handleImageLoad}
               className="h-full w-auto object-contain rounded-2xl shadow-lg border-2 border-gray-300"
-              style={{ maxWidth: '100%' }}
+              style={{ maxWidth: "100%" }}
             />
+            {/* Coordinate Markers */}
+            {sampleCoordinates.map((coord, index) => (
+              <div
+                key={index}
+                className="absolute bg-red-500 rounded-full"
+                style={{
+                  width: "12px",
+                  height: "12px",
+                  left: `${coord.x * imageSize.width}px`,
+                  top: `${coord.y * imageSize.height}px`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            ))}
             <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-lg">
               {currentPictureIndex + 1}/{pictures.length}
             </div>
@@ -111,7 +136,6 @@ function Identify() {
       {/* Thumbnail Gallery */}
       <div className="flex flex-wrap gap-4 justify-center max-w-6xl">
         <AddButton onFileSelect={addPictureFile} />
-        
         {pictures.length === 0 ? (
           <EmptyView />
         ) : (
