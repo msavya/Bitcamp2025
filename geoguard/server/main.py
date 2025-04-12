@@ -126,19 +126,7 @@ def text_identification(path):
             
     cv2.imwrite('edited_text.png', image)
 
-        # Compute centroid (average of all vertices)
-        x = sum(v.x for v in vertices) / len(vertices)
-        y = sum(v.y for v in vertices) / len(vertices)
-
-        # Convert to pixel coordinates
-        center_x = int(x)
-        center_y = int(y)
-        output += f"Centroid: ({center_x}, {center_y})\n"
-
-        # Draw the centroid
-        cv2.circle(image, (center_x, center_y), radius=6, color=(0, 0, 255), thickness=-1)
-            
-    cv2.imwrite('edited_text.png', image)
+       
 
     return output, bounding_boxes
 
