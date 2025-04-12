@@ -30,7 +30,6 @@ def localize_objects(path):
 
     objects = client.object_localization(image=image).localized_object_annotations
 
-    output = f"Number of objects found: {len(objects)}\n"
     object_data = []
 
     img = cv2.imread(path)
@@ -41,13 +40,10 @@ def localize_objects(path):
 
     for object_ in objects:
         if object_.name in ["Building", "Church", "Temple"]:
-            output += f"\n{object_.name} (confidence: {object_.score:.2f})\n"
-            output += "Normalized bounding polygon vertices:\n"
             
             vertices = []
             for vertex in object_.bounding_poly.normalized_vertices:
                 vertices.append((vertex.x, vertex.y))
-                output += f" - ({vertex.x:.4f}, {vertex.y:.4f})\n"
 
             # Compute centroid (average of all vertices)
             x = sum(v[0] for v in vertices) / len(vertices)
@@ -56,29 +52,21 @@ def localize_objects(path):
             # Convert to pixel coordinates
             center_x = int(x * width)
             center_y = int(y * height)
-            output += f"Centroid (in pixels): ({center_x}, {center_y})\n"
 
             # Convert back to normalized coordinates
             normalized_center_x = center_x / width
             normalized_center_y = center_y / height
-            output += f"Centroid (normalized): ({normalized_center_x:.4f}, {normalized_center_y:.4f})\n"
-
-            # Draw the centroid
-            cv2.circle(img, (center_x, center_y), radius=10, color=(0, 0, 255), thickness=-1)
 
             object_data.append({
                 'name': object_.name,
                 'confidence': object_.score,
                 'vertices': vertices,
-                'centroid': (center_x, center_y),
                 'normalized_centroid': (normalized_center_x, normalized_center_y),
                 'normalized': True
             })
 
-    # Save the image with all centroids
-    cv2.imwrite('edited.png', img)
+    return object_data
 
-    return output, object_data
 def text_identification(path):
     """
     Identify text in the local image and return information.
@@ -113,12 +101,6 @@ def text_identification(path):
     for text in texts[1:]:  # Skip index 0 (full block)
         vertices = text.bounding_poly.vertices
         box = [(vertex.x, vertex.y) for vertex in vertices]
-        bounding_boxes.append({
-            'text': text.description,
-            'vertices': box,
-            'normalized': True  # now storing normalized centroid
-        })
-        output += f"Text: '{text.description}', Coordinates: {box}\n"
 
         # Compute centroid (average of all vertices)
         x = sum(v.x for v in vertices) / len(vertices)
@@ -127,21 +109,20 @@ def text_identification(path):
         # Normalize centroid coordinates
         normalized_x = x / width
         normalized_y = y / height
-        output += f"Normalized Centroid: ({normalized_x:.4f}, {normalized_y:.4f})\n"
 
         # Convert to pixel coordinates for visualization
         center_x = int(normalized_x * width)
         center_y = int(normalized_y * height)
 
-        # Draw the centroid
-        cv2.circle(image, (center_x, center_y), radius=6, color=(0, 0, 255), thickness=-1)
-
         # Update dictionary with normalized centroid
-        bounding_boxes[-1]['normalized_centroid'] = (normalized_x, normalized_y)
+        bounding_boxes.append({
+            'text': text.description,
+            'vertices': box,
+            'normalized_centroid':(normalized_x, normalized_y),
+            'normalized': True  # now storing normalized centroid
+        })
 
-    cv2.imwrite('edited_text.png', image)
-
-    return output, bounding_boxes
+    return bounding_boxes
 
 
 def blur_combined_elements(image_path, output_path, elements_data):
@@ -208,16 +189,3 @@ def process_image_for_privacy(image_path, output_path):
     blur_result = blur_combined_elements(image_path, output_path, all_elements)
     
     return blur_result
-
-# Example usage with the test image
-test_image_path = "nyc2.jpeg"
-output_image_path = "nyc2_privacy_protected.jpg"
-
-#     script_dir = os.path.dirname(os.path.abspath(__file__))
-#     os.chdir(script_dir)
-
-#print(localize_objects("landmarks.webp"))
-result_text, object_data = text_identification("street_signs.jpeg")
-print("🧠 Object Detection Report")
-print("=" * 30)
-print(result_text)
