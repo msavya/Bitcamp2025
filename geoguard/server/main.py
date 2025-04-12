@@ -93,6 +93,8 @@ def text_identification(path):
     img = vision.Image(content=content)
     
     image = cv2.imread(path)
+    
+    image = cv2.imread(path)
         
     response = client.text_detection(image=img)
     texts = response.text_annotations
@@ -109,6 +111,20 @@ def text_identification(path):
             'normalized': False
         })
         output += f"Text: '{text.description}', Coordinates: {box}\n"
+
+        # Compute centroid (average of all vertices)
+        x = sum(v.x for v in vertices) / len(vertices)
+        y = sum(v.y for v in vertices) / len(vertices)
+
+        # Convert to pixel coordinates
+        center_x = int(x)
+        center_y = int(y)
+        output += f"Centroid: ({center_x}, {center_y})\n"
+
+        # Draw the centroid
+        cv2.circle(image, (center_x, center_y), radius=6, color=(0, 0, 255), thickness=-1)
+            
+    cv2.imwrite('edited_text.png', image)
 
         # Compute centroid (average of all vertices)
         x = sum(v.x for v in vertices) / len(vertices)
@@ -186,18 +202,23 @@ def process_image_for_privacy(image_path, output_path):
         shutil.copy(image_path, output_path)
         return f"No sensitive content detected. Original image saved to {output_path}"
     
-    return blur_combined_elements(image_path, output_path, all_elements)
+    # Blur all detected elements
+    blur_result = blur_combined_elements(image_path, output_path, all_elements)
+    
+    return blur_result
 
-# # Example usage
-# if __name__ == "__main__":
-#     test_image_path = "nyc.jpeg"
-#     output_image_path = "nyc_privacy_protected.jpg"
+# Example usage with the test image
+test_image_path = "nyc2.jpeg"
+output_image_path = "nyc2_privacy_protected.jpg"
 
 #     script_dir = os.path.dirname(os.path.abspath(__file__))
 #     os.chdir(script_dir)
 
-#     result = process_image_for_privacy(test_image_path, output_image_path)
-#     print(result)
+
+
+#print(localize_objects("landmarks.webp"))
+print(text_identification("street_signs.jpeg"))
+
 
 #print(localize_objects("landmarks.webp"))
 print(text_identification("street_signs.jpeg"))
