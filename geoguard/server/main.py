@@ -32,24 +32,47 @@ def localize_objects(path):
 
     output = f"Number of objects found: {len(objects)}\n"
     object_data = []
-    
+
+    img = cv2.imread(path)
+    if img is None:
+        return "Error: Image not found or unreadable", []
+
+    height, width, _ = img.shape
+
     for object_ in objects:
         if object_.name in ["Building", "Church", "Temple"]:
-            output += f"\n{object_.name} (confidence: {object_.score})\n"
+            output += f"\n{object_.name} (confidence: {object_.score:.2f})\n"
             output += "Normalized bounding polygon vertices:\n"
+            
             vertices = []
             for vertex in object_.bounding_poly.normalized_vertices:
-                output += f" - ({vertex.x}, {vertex.y})\n"
                 vertices.append((vertex.x, vertex.y))
+                output += f" - ({vertex.x:.4f}, {vertex.y:.4f})\n"
+
+            # Compute centroid (average of all vertices)
+            x = sum(v[0] for v in vertices) / len(vertices)
+            y = sum(v[1] for v in vertices) / len(vertices)
+
+            # Convert to pixel coordinates
+            center_x = int(x * width)
+            center_y = int(y * height)
+            output += f"Centroid: ({center_x}, {center_y})\n"
+
+            # Draw the centroid
+            cv2.circle(img, (center_x, center_y), radius=10, color=(0, 0, 255), thickness=-1)
+
             object_data.append({
                 'name': object_.name,
                 'confidence': object_.score,
                 'vertices': vertices,
+                'centroid': (center_x, center_y),
                 'normalized': True
             })
-    
-    return output, object_data
 
+    # Save the image with all centroids
+    cv2.imwrite('edited.png', img)
+
+    return output, object_data
 def text_identification(path):
     """
     Identify text in the local image and return information.
@@ -149,13 +172,15 @@ def process_image_for_privacy(image_path, output_path):
     
     return blur_combined_elements(image_path, output_path, all_elements)
 
-# Example usage
-if __name__ == "__main__":
-    test_image_path = "nyc.jpeg"
-    output_image_path = "nyc_privacy_protected.jpg"
+# # Example usage
+# if __name__ == "__main__":
+#     test_image_path = "nyc.jpeg"
+#     output_image_path = "nyc_privacy_protected.jpg"
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)
+#     script_dir = os.path.dirname(os.path.abspath(__file__))
+#     os.chdir(script_dir)
 
-    result = process_image_for_privacy(test_image_path, output_image_path)
-    print(result)
+#     result = process_image_for_privacy(test_image_path, output_image_path)
+#     print(result)
+
+print(localize_objects("landmarks.webp"))
