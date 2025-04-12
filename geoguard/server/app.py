@@ -2,9 +2,23 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from main import text_identification
 from main import localize_objects
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # Add your frontend's URL here
+    "http://127.0.0.1:8000",  # Optionally, you can allow localhost itself
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows all origins in the list
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 class UserInput(BaseModel):
     file_path: str
