@@ -35,7 +35,7 @@ function Identify() {
 
     const formData = new FormData();
     formData.append("file", file);
-    fetch("http://localhost:8000/submit/", {
+    fetch("http://localhost:8000/upload/image", {
       method: "POST",
       body: formData,
     })

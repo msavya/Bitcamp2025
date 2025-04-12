@@ -6,9 +6,11 @@ function Home() {
     //add server logic
     console.log("Selected file:", file);
   };
+
+  
   return (
     <>
-    <div class="body" className="bg-custom-bg bg-cover bg-center min-h-screen">
+      <div class="body" className="bg-custom-bg bg-cover bg-center min-h-screen">
         <div className ="text-[40px] text-center my-12">
           <h1 className ="font-bold">GeoGuard</h1>
           <p className = "text-[#E78743] font-bold">Hide location information in images and videos</p>

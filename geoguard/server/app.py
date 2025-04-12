@@ -1,40 +1,39 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from main import text_identification
-from main import localize_objects
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-
+import shutil
+import os
+from main import text_identification, localize_objects
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",  # Add your frontend's URL here
-    "http://127.0.0.1:8000",  # Optionally, you can allow localhost itself
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows all origins in the list
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-class UserInput(BaseModel):
-    file_path: str
-    
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@app.get("/upload/image")
-def upload_photo(data: UserInput):
-    
-    text_bounding_boxes = text_identification(data.file_path)
-    building_bounding_boxes = localize_objects(data.file_path)
-    
-    return {"text_bounding_boxes": text_bounding_boxes, "building_bounding_boxes": building_bounding_boxes}
+@app.post("/upload/image")
+async def upload_photo(file: UploadFile = File(...)):
+    # Save the uploaded file to disk
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
+    # Process the file
+    text_bounding_boxes = text_identification(file_path)
+    building_bounding_boxes = localize_objects(file_path)
 
-#When user uploads image/video, it should go oto backend processing
-
-#It should return the array of frames with centralized points
-#If you click on point, it should be able to send the point selected to backend
-#The backend should return with specific part of blurred image/video
+    return {
+        "text_bounding_boxes": text_bounding_boxes,
+        "building_bounding_boxes": building_bounding_boxes,
+    }
