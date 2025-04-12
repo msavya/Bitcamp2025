@@ -27,8 +27,3 @@ geoguard/server/*.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-.env
-geoguard/server/*.json
-
-/Users/suhaniagrawal/Desktop/Bitcamp2025/geoguard/server/exampletestvision-62c38ca018de.json
