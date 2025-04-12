@@ -176,8 +176,8 @@ def process_image_for_privacy(image_path, output_path):
     return blur_result
 
 # Example usage with the test image
-test_image_path = "nyc.jpeg"
-output_image_path = "nyc_privacy_protected.jpg"
+test_image_path = "nyc2.jpeg"
+output_image_path = "nyc2_privacy_protected.jpg"
 
 # Make sure the script directory is the working directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
