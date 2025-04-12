@@ -98,6 +98,9 @@ def text_identification(path):
         
     
         
+    
+    image = cv2.imread(path)
+        
     response = client.text_detection(image=img)
     texts = response.text_annotations
 
@@ -131,6 +134,7 @@ def text_identification(path):
        
 
        
+
 
 
 
