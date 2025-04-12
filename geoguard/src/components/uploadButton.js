@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-export default function AddButton({ onFileSelect }) {
+export default function UploadButton({ onFileSelect }) {
   const fileInputRef = useRef(null);
 
   const handleClick = () => {
@@ -16,15 +16,8 @@ export default function AddButton({ onFileSelect }) {
 
   return (
     <>
-      <div
-        className="add-button w-[126px] h-[126px] flex items-center justify-center bg-[#D9D9D9] rounded-[15px] cursor-pointer"
-        onClick={handleClick}
-      >
-        <img
-          src="plusIcon.png"
-          className="w-[50px] h-[50px]"
-          alt="add"
-        />
+      <div onClick={handleClick}>
+        <button className="bg-[#E78743] text-white px-4 py-4 rounded-[25px]">Upload image or video</button>
       </div>
       <input
         type="file"
