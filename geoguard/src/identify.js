@@ -60,10 +60,11 @@ function Identify() {
         setFullBoundingBoxes(prev => ({
           ...prev,
           [fileUrl]: boxes.map(box => ({
-            vertices: box.vertices, // [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
-            type: box.type || 'unknown' // optional: track what type of object
+            
+            vertices: box.vertices // [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
           }))
         }));
+
 
         setCoordinatesMap(prev => ({
           ...prev,
@@ -77,6 +78,8 @@ function Identify() {
 
   const submitBlurRequest = async () => {
   if (!selectedDotData || !selectedDotData.fileUrl) return;
+
+  console.log("Total Box Boundings:", fullBoundingBoxes);
 
   const originalFile = pictures.find(p => p.url === selectedDotData.fileUrl)?.file;
   if (!originalFile) {
@@ -99,11 +102,13 @@ function Identify() {
   // 3. Prepare FormData
   const formData = new FormData();
   formData.append("file", originalFile);
-  
+
   // 4. Append each coordinate individually
   flatVertices.forEach(coord => {
     formData.append("vertices", coord.toString());
   });
+
+
 
   try {
     const response = await fetch("http://localhost:8000/blur-region/", {
@@ -125,13 +130,14 @@ function Identify() {
       setDisplayPopup(false);
       setSelectedDotData(null);
       setSelectedDotIndex(null);
+      
     } else {
       console.error("Blur request failed:", await response.text());
     }
   } catch (error) {
     console.error("Request error:", error);
   }
-};
+  };
 
   // Ensure that `currentCoordinates` is initialized before accessing it
   const currentCoordinates = coordinatesMap[pictures[currentPictureIndex]?.url] || [];

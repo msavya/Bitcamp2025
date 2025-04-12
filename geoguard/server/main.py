@@ -100,7 +100,8 @@ def text_identification(path):
 
     for text in texts[1:]:  # Skip index 0 (full block)
         vertices = text.bounding_poly.vertices
-        box = [(vertex.x, vertex.y) for vertex in vertices]
+        box = [(vertex.x / width, vertex.y / height) for vertex in vertices]
+
 
         # Compute centroid (average of all vertices)
         x = sum(v.x for v in vertices) / len(vertices)
