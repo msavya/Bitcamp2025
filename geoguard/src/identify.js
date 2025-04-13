@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 function Identify({ uploadedFile }) {
   // State management
   const { state } = useLocation();
-  const [mainImage, setMainImage] = useState(null);
+  
   const [pictures, setPictures] = useState([]);
   const [currentPictureIndex, setCurrentPictureIndex] = useState(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -29,7 +29,7 @@ function Identify({ uploadedFile }) {
   const currentPicture = pictures[currentPictureIndex];
   const currentUrl = currentPicture?.url;
   const currentCoordinates = currentUrl ? coordinatesMap[currentUrl] || [] : [];
-  const currentBlurRegions = currentUrl ? blurRegions[currentUrl] || [] : [];
+  
 
   // Effect to handle picture index changes
   useEffect(() => {
@@ -38,16 +38,16 @@ function Identify({ uploadedFile }) {
     } else if (pictures.length === 0) {
       setCurrentPictureIndex(null);
     }
-  }, [pictures]);
+  }, [pictures, currentPictureIndex]);
 
   useEffect(() => {
     if (state && state.imageFile) {
       const newImage = state.imageFile;
-      const fileUrl = URL.createObjectURL(newImage);
+      
       console.log(newImage);
       addPictureFile(newImage);
     }
-  }, [state]);
+  }, [state, addPictureFile]);
 
   // Add new image file
   const addPictureFile = (file) => {
@@ -261,7 +261,7 @@ function Identify({ uploadedFile }) {
         return fallbackBlurRemoval(currentPic, updatedBlurRegions);
       }
   
-      const imageUrl = `https://bitcamp2025-slpu.onrender.com/${result.blurred_image_url}`;
+      const imageUrl = `http://localhost:8000${result.blurred_image_url}`;
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
         throw new Error("Failed to fetch blurred image");

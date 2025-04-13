@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 function Cam() {
   const [loaded, setLoaded] = useState(false);
-  const [detectedText, setDetectedText] = useState([]);
+  
   const [summary, setSummary] = useState(""); // new state for summary
   const videoRef = useRef(null);
   const canvasRef = useRef(null);

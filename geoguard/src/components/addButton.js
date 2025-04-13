@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef } from "react";
 
 export default function AddButton({ onFileSelect }) {
   const fileInputRef = useRef(null);
