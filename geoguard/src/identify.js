@@ -66,7 +66,7 @@ function Identify({ uploadedFile }) {
     const formData = new FormData();
     formData.append("file", file);
 
-    fetch("http://localhost:8000/upload/image", {
+    fetch("https://bitcamp2025-slpu.onrender.com/upload/image", {
       method: "POST",
       body: formData,
     })
@@ -123,7 +123,7 @@ function Identify({ uploadedFile }) {
 
 
     try {
-      const blurRes = await fetch("http://localhost:8000/blur-region/", {
+      const blurRes = await fetch("https://bitcamp2025-slpu.onrender.com/blur-region/", {
         method: "POST",
         body: formData,
       });
@@ -261,7 +261,7 @@ function Identify({ uploadedFile }) {
         return fallbackBlurRemoval(currentPic, updatedBlurRegions);
       }
   
-      const imageUrl = `http://localhost:8000${result.blurred_image_url}`;
+      const imageUrl = `https://bitcamp2025-slpu.onrender.com/${result.blurred_image_url}`;
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
         throw new Error("Failed to fetch blurred image");

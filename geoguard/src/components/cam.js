@@ -66,7 +66,7 @@ function Cam() {
     const imageData = canvas.toDataURL("image/jpeg");
 
     try {
-      const res = await fetch("http://localhost:8000/detect-text", {
+      const res = await fetch("https://bitcamp2025-slpu.onrender.com/detect-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageData }),
