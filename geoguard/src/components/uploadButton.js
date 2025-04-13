@@ -17,7 +17,7 @@ export default function UploadButton({ onFileSelect }) {
   return (
     <>
       <div onClick={handleClick}>
-        <button className="bg-[#E78743] text-white px-4 py-4 rounded-[25px]">Upload image or video</button>
+        <button className="bg-[#E78743] text-white px-4 py-4 rounded-[25px] font-bold hover:bg-[#D67632] transition-colors">Upload image or video</button>
       </div>
       <input
         type="file"

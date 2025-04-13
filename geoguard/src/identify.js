@@ -3,6 +3,7 @@ import AddButton from "./components/addButton";
 import PictureView from "./components/pictureView";
 import EmptyView from "./components/emptyView";
 import ConfirmBlur from "./components/confirmBlur";
+import { useNavigate } from "react-router-dom";
 
 function Identify() {
   const [pictures, setPictures] = useState([]);
@@ -12,7 +13,7 @@ function Identify() {
   const [selectedDotIndex, setSelectedDotIndex] = useState(null);
   const [selectedDotData, setSelectedDotData] = useState(null);
   const [fullBoundingBoxes, setFullBoundingBoxes] = useState({});
-
+  const navigate = useNavigate();
 
   const [displayPopup, setDisplayPopup] = useState(false);
   const imageRef = useRef(null);
@@ -185,10 +186,16 @@ function Identify() {
   const handleThumbnailClick = (index) => {
     setCurrentPictureIndex(index);
   };
+  const handleClick = () => {
+    navigate('/')
+  }
 
 
   return (
     <div className="body bg-custom-bg bg-cover bg-center min-h-screen flex flex-col items-center justify-center p-4">
+      <div class="backButton" className="absolute top-12 left-12 z-50">
+        <button onClick ={handleClick} className="bg-[#E78743] text-white px-4 py-4 rounded-[25px] font-bold hover:bg-[#D67632] px-11">Back</button>
+      </div>
       {/* Main Image Container */}
       <div className="flex flex-row items-center gap-[70px]">
         <div className="mb-8 flex justify-center" style={{ height: "50vh" }}>
