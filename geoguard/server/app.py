@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # Import StaticFiles for serving static files
 from typing import List
 import shutil
 import os
@@ -28,10 +29,13 @@ app.add_middleware(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Mount the 'uploads' directory as a static file path
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 @app.post("/blur-region/")
 async def blur_region(
     file: UploadFile = File(...),
-    vertices: List[float] = Form(...)
+    vertices: List[float] = Form(...),
 ):
     if len(vertices) != 8:
         return {"error": "Exactly 8 coordinates (x1, y1, ..., x4, y4) required."}
@@ -42,20 +46,32 @@ async def blur_region(
     with open(image_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Convert list to [(x1, y1), ..., (x4, y4)]
+    # Process vertices
     paired_vertices = [(vertices[i], vertices[i+1]) for i in range(0, 8, 2)]
 
-    elements_data = [{
+    # Generate blurred image
+    blurred_filename = f"blurred_{image_filename}"
+    output_path = os.path.join(UPLOAD_DIR, blurred_filename)
+    blur_combined_elements(image_path, output_path, [{
         "vertices": paired_vertices,
         "normalized": True
-    }]
+    }])
 
-    output_path = os.path.join(UPLOAD_DIR, f"blurred_{image_filename}")
-    blur_result = blur_combined_elements(image_path, output_path, elements_data)
+    # Run detections
+    text_boxes = text_identification(output_path)
+    building_boxes = localize_objects(output_path)
 
-    print("Blur completed. Returning file:", output_path)
+    print(len(building_boxes))
 
-    return FileResponse(output_path, media_type="image/jpeg", filename=f"blurred_{file.filename}")
+    # Return JSON response with correct URL
+    return {
+        "success": True,
+        "blurred_image_url": f"/uploads/{blurred_filename}",  # Correct URL format
+        "detections": {
+            "text": text_boxes,
+            "buildings": building_boxes
+        }
+    }
 
 @app.post("/upload/image")
 async def upload_photo(file: UploadFile = File(...)):
