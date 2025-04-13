@@ -45,20 +45,11 @@ function Identify({ uploadedFile }) {
       const newImage = state.imageFile;
       const fileUrl = URL.createObjectURL(newImage);
       console.log(newImage);
-      setMainImage(newImage);  // Set the main image as the one passed in
-      setPictures((prevPictures) => [...prevPictures, { url: newImage }]);  // Add to the list of images
+      addPictureFile(newImage);
     }
   }, [state]);
 
-  useEffect(() => {
-    if (state && state.imageFile) {
-      const newImage = state.imageFile;
-      const fileUrl = URL.createObjectURL(newImage);
-      console.log(newImage);
-      setMainImage(newImage);  // Set the main image as the one passed in
-      setPictures((prevPictures) => [...prevPictures, { url: newImage }]);  // Add to the list of images
-    }
-  }, [state]);
+
 
   // Add new image file
   const addPictureFile = (file) => {

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import 'ldrs/lineSpinner'
+import React, { useState, useEffect, useRef } from "react";
 
 function Cam() {
   // fix loading logic after implementing camera

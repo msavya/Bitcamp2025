@@ -1,7 +1,7 @@
 import './App.css';
 import UploadButton from "./components/uploadButton"
 import { GradualSpacing } from './components/gradualspacing';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import Cam from './components/cam';
 
 function Home() {
