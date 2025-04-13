@@ -1,7 +1,7 @@
 import { useRef } from "react";
-i
 
-import { useState } from "react";
+
+
 import { useNavigate } from "react-router";
 
 export default function UploadButton({ onFileSelect }) {
@@ -23,10 +23,7 @@ export default function UploadButton({ onFileSelect }) {
     if (file && onFileSelect) {
       const fileUrl = URL.createObjectURL(file);  // Create a URL for the file
 
-      setPictures((prevPictures) => [
-        ...prevPictures,
-        { url: fileUrl, file }
-      ]);
+      
       navigate("/identify", { state: { imageFile: file } });
       // onFileSelect(file);
       // setSelectedFile(file);

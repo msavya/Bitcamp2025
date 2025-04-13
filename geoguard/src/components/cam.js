@@ -73,7 +73,7 @@ function Cam() {
       });
 
       const data = await res.json();
-      setDetectedText(data.texts || []);
+      
       setSummary(data.summary || ""); // set Gemini response if exists
     } catch (error) {
       console.error("Text detection failed:", error);
