@@ -10,6 +10,7 @@ import uuid
 import numpy as np
 from main import blur_combined_elements
 from main import text_identification, localize_objects
+import json
 
 app = FastAPI()
 
@@ -35,33 +36,46 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 @app.post("/blur-region/")
 async def blur_region(
     file: UploadFile = File(...),
-    vertices: List[float] = Form(...),
+    regions: List[str] = Form(...),
 ):
-    if len(vertices) != 8:
-        return {"error": "Exactly 8 coordinates (x1, y1, ..., x4, y4) required."}
 
+    blur_inputs = []
+
+
+    for region_str in regions:
+        region = json.loads(region_str)
+        if len(region) != 8:
+            return {"error": "Each region must have exactly 8 coordinates"}
+        paired_vertices = [(region[i], region[i+1]) for i in range(0, 8, 2)]
+        blur_inputs.append({
+            "vertices": paired_vertices,
+            "normalized": True
+        })
+  
+    print("HERE")
     # Save file locally
     image_filename = f"{uuid.uuid4()}.jpg"
     image_path = os.path.join(UPLOAD_DIR, image_filename)
     with open(image_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
-    # Process vertices
-    paired_vertices = [(vertices[i], vertices[i+1]) for i in range(0, 8, 2)]
-
+  
+    print("HERE 2")
     # Generate blurred image
     blurred_filename = f"blurred_{image_filename}"
     output_path = os.path.join(UPLOAD_DIR, blurred_filename)
-    blur_combined_elements(image_path, output_path, [{
-        "vertices": paired_vertices,
-        "normalized": True
-    }])
+    blur_combined_elements(image_path, output_path, blur_inputs)
 
+
+    print("HERE 3")
     # Run detections
     text_boxes = text_identification(output_path)
     building_boxes = localize_objects(output_path)
-
+  
     print(len(building_boxes))
+
+
+    print("URL", f"/uploads/{blurred_filename}")
+
 
     # Return JSON response with correct URL
     return {
@@ -73,6 +87,7 @@ async def blur_region(
         }
     }
 
+
 @app.post("/upload/image")
 async def upload_photo(file: UploadFile = File(...)):
     # Save the uploaded file to disk
@@ -80,9 +95,11 @@ async def upload_photo(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+
     # Process the file
     text_bounding_boxes = text_identification(file_path)
     building_bounding_boxes = localize_objects(file_path)
+
 
     return {
         "text_bounding_boxes": text_bounding_boxes,

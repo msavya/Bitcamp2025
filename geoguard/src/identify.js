@@ -40,16 +40,14 @@ function Identify({ uploadedFile }) {
     }
   }, [pictures]);
 
-  useEffect(() => {
-    if (state && state.imageFile) {
-      const newImage = state.imageFile;
-      const fileUrl = URL.createObjectURL(newImage);
-      console.log(newImage);
-      addPictureFile(newImage);
-    }
-  }, [state]);
-
-
+  // useEffect(() => {
+  //   if (state && state.imageFile) {
+  //     const newImage = state.imageFile;
+  //     const fileUrl = URL.createObjectURL(newImage);
+  //     console.log(newImage);
+  //     addPictureFile(newImage);
+  //   }
+  // }, [state]);
 
   // Add new image file
   const addPictureFile = (file) => {
@@ -116,6 +114,14 @@ function Identify({ uploadedFile }) {
     formData.append("file", pic.latestFile);
     flatVertices.forEach(coord => formData.append("vertices", coord.toString()));
 
+    // Wrap it in a regions field, as a JSON string
+    if (flatVertices.length === 8) {
+      formData.append("regions", JSON.stringify(flatVertices));
+    } else {
+      console.warn("Selected box has invalid number of coordinates:", flatVertices);
+    }
+
+
     try {
       const blurRes = await fetch("http://localhost:8000/blur-region/", {
         method: "POST",
@@ -137,14 +143,15 @@ function Identify({ uploadedFile }) {
           : p
       ));
 
-      // Track blurred regions
-      setBlurRegions(prev => ({
-        ...prev,
-        [newUrl]: [
-          ...(prev[fileUrl] || []),
-          flatVertices
-        ]
-      }));
+      setBlurRegions(prev => {
+        const previousPoints = prev[fileUrl] || [];
+        const updated = {
+          ...prev,
+          [newUrl]: [...previousPoints, flatVertices] // ✅ Add new point on top of old ones
+        };
+        delete updated[fileUrl]; // Optional cleanup
+        return updated;
+      }); 
 
       // Transfer coordinate data to new URL
       setCoordinatesMap(prev => ({
@@ -204,10 +211,19 @@ function Identify({ uploadedFile }) {
             : p
         ));
   
-        setBlurRegions(prev => ({
-          ...prev,
-          [currentUrl]: []
-        }));
+        setBlurRegions(prev => {
+          const updated = {
+            ...prev,
+            [currentPicture.url]: prev[currentPicture.url].filter((point, i) => {
+              console.log(`Trying to delete point at index ${i}`);
+              return i !== index;
+            })
+          
+          };
+          console.log("Updated regions after delete:", updated[currentPicture.url]);
+          return updated;
+        });
+
         setSelectedBlurIndex(null);
         return;
       }
@@ -217,8 +233,13 @@ function Identify({ uploadedFile }) {
       formData.append("file", currentPic.originalFile);
       
       updatedBlurRegions.forEach(region => {
-        region.forEach(coord => formData.append("vertices", coord.toString()));
+        if (region.length === 8) {
+          formData.append("regions", JSON.stringify(region));
+        } else {
+          console.warn("Skipping invalid region:", region);
+        }
       });
+ 
   
       // Process the image with remaining blur regions
       const blurRes = await fetch("http://localhost:8000/blur-region/", {
