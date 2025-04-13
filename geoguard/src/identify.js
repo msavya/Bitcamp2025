@@ -40,14 +40,14 @@ function Identify({ uploadedFile }) {
     }
   }, [pictures]);
 
-  // useEffect(() => {
-  //   if (state && state.imageFile) {
-  //     const newImage = state.imageFile;
-  //     const fileUrl = URL.createObjectURL(newImage);
-  //     console.log(newImage);
-  //     addPictureFile(newImage);
-  //   }
-  // }, [state]);
+  useEffect(() => {
+    if (state && state.imageFile) {
+      const newImage = state.imageFile;
+      const fileUrl = URL.createObjectURL(newImage);
+      console.log(newImage);
+      addPictureFile(newImage);
+    }
+  }, [state]);
 
   // Add new image file
   const addPictureFile = (file) => {

@@ -14,6 +14,7 @@ from PIL import Image
 from dotenv import load_dotenv
 import google.generativeai as genai
 from main import blur_combined_elements, text_identification, localize_objects
+import json
 
 # Load .env variables
 load_dotenv()
@@ -45,57 +46,51 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 @app.post("/blur-region/")
 async def blur_region(
-    file: UploadFile = File(...),
-    regions: List[str] = Form(...),
+   file: UploadFile = File(...),
+   regions: List[str] = Form(...),
 ):
-
-    blur_inputs = []
-
-
-    for region_str in regions:
-        region = json.loads(region_str)
-        if len(region) != 8:
-            return {"error": "Each region must have exactly 8 coordinates"}
-        paired_vertices = [(region[i], region[i+1]) for i in range(0, 8, 2)]
-        blur_inputs.append({
-            "vertices": paired_vertices,
-            "normalized": True
-        })
-  
-    print("HERE")
-    # Save file locally
-    image_filename = f"{uuid.uuid4()}.jpg"
-    image_path = os.path.join(UPLOAD_DIR, image_filename)
-    with open(image_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    paired_vertices = [(vertices[i], vertices[i+1]) for i in range(0, 8, 2)]
-
-    blurred_filename = f"blurred_{image_filename}"
-    output_path = os.path.join(UPLOAD_DIR, blurred_filename)
-    blur_combined_elements(image_path, output_path, blur_inputs)
+   blur_inputs = []
+   for region_str in regions:
+       region = json.loads(region_str)
+       if len(region) != 8:
+           return {"error": "Each region must have exactly 8 coordinates"}
+       paired_vertices = [(region[i], region[i+1]) for i in range(0, 8, 2)]
+       blur_inputs.append({
+           "vertices": paired_vertices,
+           "normalized": True
+       })
 
 
-    print("HERE 3")
-    # Run detections
-    text_boxes = text_identification(output_path)
-    building_boxes = localize_objects(output_path)
-  
-    print(len(building_boxes))
+   # Save file locally
+   image_filename = f"{uuid.uuid4()}.jpg"
+   image_path = os.path.join(UPLOAD_DIR, image_filename)
+   with open(image_path, "wb") as buffer:
+       shutil.copyfileobj(file.file, buffer)
 
 
-    print("URL", f"/uploads/{blurred_filename}")
+   # Generate blurred image
+   blurred_filename = f"blurred_{image_filename}"
+   output_path = os.path.join(UPLOAD_DIR, blurred_filename)
+   blur_combined_elements(image_path, output_path, blur_inputs)
 
 
-    # Return JSON response with correct URL
-    return {
-        "success": True,
-        "blurred_image_url": f"/uploads/{blurred_filename}",
-        "detections": {
-            "text": text_boxes,
-            "buildings": building_boxes
-        }
-    }
+
+
+   # Run detections
+   text_boxes = text_identification(output_path)
+   building_boxes = localize_objects(output_path)
+
+
+   # Return JSON response with correct URL
+   return {
+       "success": True,
+       "blurred_image_url": f"/uploads/{blurred_filename}",  # Correct URL format
+       "detections": {
+           "text": text_boxes,
+           "buildings": building_boxes
+       }
+   }
+
 
 
 @app.post("/upload/image")
