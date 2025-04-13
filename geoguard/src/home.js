@@ -32,7 +32,7 @@ function Home() {
         </div>
         <div class="secondhalf" className="flex flex-row justify-center items-center gap-[70px]">
           <div class="leftBox">
-          <img src="change.png" className="w-[450px] h-[300px]"/>
+          <img src="change.png" alt = "" className="w-[450px] h-[300px]"/>
           </div>
           <div class="rightBox" className="bg-[#F7EADB] px-[40px] py-[30px] pt-[40px] rounded-[25px] shadow-xl w-[500px] h-[330px]">
             <div class="dashed" className = "border-[3px] border-dashed border-[#000000] px-[15px] pt-[15px] pb-[35px] flex flex-col items-center rounded-[25px]">

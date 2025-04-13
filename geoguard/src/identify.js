@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import AddButton from "./components/addButton";
 import PictureView from "./components/pictureView";
 import EmptyView from "./components/emptyView";
@@ -30,6 +30,57 @@ function Identify({ uploadedFile }) {
   const currentUrl = currentPicture?.url;
   const currentCoordinates = currentUrl ? coordinatesMap[currentUrl] || [] : [];
   
+  // Add new image file
+
+  
+  const addPictureFile = useCallback((file) => {
+    const fileUrl = URL.createObjectURL(file);
+    const newPicture = {
+      url: fileUrl,
+      originalFile: file,
+      latestFile: file,
+      originalUrl: fileUrl,
+    };
+  
+    setPictures(prev => [...prev, newPicture]);
+    setCurrentPictureIndex(prev => prev + 1);
+    setDisplayPopup(false);
+  
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    fetch("https://bitcamp2025-slpu.onrender.com/upload/image", {
+      method: "POST",
+      body: formData,
+    })
+      .then(res => res.json())
+      .then(data => {
+        const buildingCoords = (data.building_bounding_boxes || []).map(b => ({
+          x: b.normalized_centroid[0],
+          y: b.normalized_centroid[1],
+        }));
+  
+        const textCoords = (data.text_bounding_boxes || []).map(t => ({
+          x: t.normalized_centroid[0],
+          y: t.normalized_centroid[1],
+        }));
+  
+        const allCoords = [...buildingCoords, ...textCoords];
+        const boxes = data.building_bounding_boxes.concat(data.text_bounding_boxes);
+  
+        setFullBoundingBoxes(prev => ({
+          ...prev,
+          [fileUrl]: boxes.map(box => ({ vertices: box.vertices })),
+        }));
+  
+        setCoordinatesMap(prev => ({
+          ...prev,
+          [fileUrl]: allCoords,
+        }));
+      })
+      .catch(err => console.error("Upload error:", err));
+  }, []);
+
 
   // Effect to handle picture index changes
   useEffect(() => {
@@ -42,62 +93,11 @@ function Identify({ uploadedFile }) {
 
   useEffect(() => {
     if (state && state.imageFile) {
-      const newImage = state.imageFile;
-      
-      console.log(newImage);
-      addPictureFile(newImage);
+      addPictureFile(state.imageFile);
     }
   }, [state, addPictureFile]);
 
-  // Add new image file
-  const addPictureFile = (file) => {
-    const fileUrl = URL.createObjectURL(file);
-    const newPicture = {
-      url: fileUrl,
-      originalFile: file,
-      latestFile: file,
-      originalUrl: fileUrl
-    };
-
-    setPictures(prev => [...prev, newPicture]);
-    setCurrentPictureIndex(pictures.length);
-    setDisplayPopup(false);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    fetch("https://bitcamp2025-slpu.onrender.com/upload/image", {
-      method: "POST",
-      body: formData,
-    })
-      .then(res => res.json())
-      .then(data => {
-        const buildingCoords = (data.building_bounding_boxes || []).map(b => ({
-          x: b.normalized_centroid[0],
-          y: b.normalized_centroid[1],
-        }));
-
-        const textCoords = (data.text_bounding_boxes || []).map(t => ({
-          x: t.normalized_centroid[0],
-          y: t.normalized_centroid[1],
-        }));
-
-        const allCoords = [...buildingCoords, ...textCoords]
-        const boxes = data.building_bounding_boxes.concat(data.text_bounding_boxes)
-
-        setFullBoundingBoxes(prev => ({
-          ...prev,
-          [fileUrl]: boxes.map(box => ({ vertices: box.vertices }))
-        }));
-
-        setCoordinatesMap(prev => ({
-          ...prev,
-          [fileUrl]: allCoords
-        }));
-      })
-      .catch(err => console.error("Upload error:", err));
-  };
-
+  
   // Handle blur submission
   const submitBlurRequest = async () => {
     if (!selectedDotData || !selectedDotData.fileUrl) return;

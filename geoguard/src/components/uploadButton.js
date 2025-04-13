@@ -21,8 +21,6 @@ export default function UploadButton({ onFileSelect }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && onFileSelect) {
-      const fileUrl = URL.createObjectURL(file);  // Create a URL for the file
-
       
       navigate("/identify", { state: { imageFile: file } });
       // onFileSelect(file);
