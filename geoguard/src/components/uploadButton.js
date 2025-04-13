@@ -1,16 +1,35 @@
 import { useRef } from "react";
+import Identify from "../identify";
+import AddButton from "./addButton";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 
 export default function UploadButton({ onFileSelect }) {
   const fileInputRef = useRef(null);
-
+  const navigate = useNavigate();
+  const [pictures, setPictures] = useState([]);
+  
   const handleClick = () => {
     fileInputRef.current.click();
   };
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // const handleFileSelect = (file) => {
+  //   setSelectedFile(file); // Updates the state with the selected file
+  // };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && onFileSelect) {
-      onFileSelect(file);
+      const fileUrl = URL.createObjectURL(file);  // Create a URL for the file
+
+      setPictures((prevPictures) => [
+        ...prevPictures,
+        { url: fileUrl, file }
+      ]);
+      navigate("/identify", { state: { imageFile: file } });
+      // onFileSelect(file);
+      // setSelectedFile(file);
     }
   };
 

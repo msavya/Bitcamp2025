@@ -4,9 +4,12 @@ import PictureView from "./components/pictureView";
 import EmptyView from "./components/emptyView";
 import ConfirmBlur from "./components/confirmBlur";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 
-function Identify() {
+function Identify({ uploadedFile }) {
   // State management
+  const { state } = useLocation();
+  const [mainImage, setMainImage] = useState(null);
   const [pictures, setPictures] = useState([]);
   const [currentPictureIndex, setCurrentPictureIndex] = useState(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -36,6 +39,26 @@ function Identify() {
       setCurrentPictureIndex(null);
     }
   }, [pictures]);
+
+  useEffect(() => {
+    if (state && state.imageFile) {
+      const newImage = state.imageFile;
+      const fileUrl = URL.createObjectURL(newImage);
+      console.log(newImage);
+      setMainImage(newImage);  // Set the main image as the one passed in
+      setPictures((prevPictures) => [...prevPictures, { url: newImage }]);  // Add to the list of images
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (state && state.imageFile) {
+      const newImage = state.imageFile;
+      const fileUrl = URL.createObjectURL(newImage);
+      console.log(newImage);
+      setMainImage(newImage);  // Set the main image as the one passed in
+      setPictures((prevPictures) => [...prevPictures, { url: newImage }]);  // Add to the list of images
+    }
+  }, [state]);
 
   // Add new image file
   const addPictureFile = (file) => {
